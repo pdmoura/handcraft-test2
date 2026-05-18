@@ -1,0 +1,193 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ShoppingCart, Menu, X, User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { usePathname } from 'next/navigation';
+import { useCart } from '@/components/providers/CartProvider';
+import MobileMenu from './MobileMenu';
+
+export default function Header() {
+  const { user, logout } = useAuth();
+  const { count } = useCart();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const navLinks = [
+    { href: '/shop', label: 'Shop' },
+    { href: '/categories', label: 'Categories' },
+    { href: '/about', label: 'About' },
+  ];
+
+  return (
+    <header className="sticky top-0 z-30 bg-white text-primary shadow-card" role="banner">
+      <div className="container-app">
+        <nav
+          className="flex items-center justify-between h-16 md:h-18"
+          aria-label="Main navigation"
+        >
+          {/* Logo */}
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Image src="/logo-idea-haven.webp" alt="Handcrafted Haven" width={240} height={64} className="object-contain shrink-0 h-16 w-auto max-w-[240px]" priority />
+            <span className="font-display text-xl md:text-2xl uppercase tracking-wider text-primary hidden sm:block">
+              Handcrafted Haven
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`font-body text-sm font-medium transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-cta after:transition-all hover:after:w-full ${
+                    isActive 
+                      ? "text-cta after:w-full" 
+                      : "text-text-muted hover:text-cta after:w-0"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+            {user?.role === 'seller' ? (
+              <Link
+                href="/dashboard"
+                className={`font-body text-sm font-medium transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-cta after:transition-all hover:after:w-full ${
+                  pathname.startsWith('/dashboard')
+                    ? "text-cta after:w-full"
+                    : "text-text-muted hover:text-cta after:w-0"
+                }`}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/sell"
+                className={`font-body text-sm font-medium transition-colors ${
+                  pathname.startsWith('/sell')
+                    ? "text-cta"
+                    : "text-cta hover:text-cta-light"
+                }`}
+              >
+                Sell
+              </Link>
+            )}
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            {/* Cart */}
+            <Link
+              href="/cart"
+              className="relative p-2 rounded-full hover:bg-primary/5 transition-colors"
+              aria-label={`Shopping cart with ${count} items`}
+            >
+              <ShoppingCart size={22} />
+              {count > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-cta text-text text-xs font-ui font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce-in">
+                  {count > 99 ? '99+' : count}
+                </span>
+              )}
+            </Link>
+
+            {/* Account */}
+            {user ? (
+              <div className="relative hidden md:block">
+                <button
+                  onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                  onBlur={() => setTimeout(() => setAccountMenuOpen(false), 200)}
+                  className="flex items-center gap-2 p-2 rounded-full hover:bg-primary/5 transition-colors"
+                  aria-expanded={accountMenuOpen}
+                  aria-haspopup="true"
+                  aria-label="Account menu"
+                >
+                  {user.avatarUrl ? (
+                    <Image
+                      src={user.avatarUrl}
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="w-7 h-7 rounded-full object-cover border-2 border-border-light"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-cta flex items-center justify-center text-xs font-bold font-ui">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <ChevronDown size={14} className={`transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {accountMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-lg shadow-dropdown py-2 animate-fade-in-down z-50">
+                    <div className="px-4 py-2 border-b border-border-light">
+                      <p className="font-body text-sm font-semibold text-text truncate">{user.name}</p>
+                      <p className="font-ui text-xs text-text-muted truncate">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-body text-text hover:bg-surface transition-colors"
+                    >
+                      <User size={16} />
+                      My Account
+                    </Link>
+                    {user.role === 'seller' && (
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-body text-text hover:bg-surface transition-colors"
+                      >
+                        <LayoutDashboard size={16} />
+                        Dashboard
+                      </Link>
+                    )}
+                    <hr className="my-1 border-border-light" />
+                    <button
+                      onClick={logout}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-body text-error w-full text-left hover:bg-error-light transition-colors"
+                    >
+                      <LogOut size={16} />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="hidden md:inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body text-sm font-semibold px-5 py-2 rounded-full transition-colors"
+              >
+                <User size={16} />
+                Sign In
+              </Link>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 rounded-full hover:bg-primary/5 transition-colors"
+              aria-label="Open menu"
+              aria-expanded={mobileMenuOpen}
+            >
+              <Menu size={24} />
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      {/* Mobile Menu */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        navLinks={navLinks}
+      />
+    </header>
+  );
+}

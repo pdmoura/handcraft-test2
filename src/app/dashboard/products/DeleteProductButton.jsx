@@ -1,0 +1,45 @@
+'use client';
+import { Trash2 } from 'lucide-react';
+import { useToast } from '@/components/providers/ToastProvider';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+export default function DeleteProductButton({  productId  }) {
+  const { showToast } = useToast();
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+      const data = await res.json();
+      
+      if (data.success) {
+        showToast('Product deleted successfully', 'success');
+        router.refresh();
+      } else {
+        showToast(data.error || 'Failed to delete product', 'error');
+      }
+    } catch {
+      showToast('Network error while deleting product', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <button 
+      onClick={handleDelete}
+      disabled={isDeleting}
+      className="inline-flex items-center gap-1 text-error/80 hover:text-error font-ui text-sm transition-colors disabled:opacity-50"
+      aria-label="Delete Product"
+    >
+      <Trash2 size={14} /> Delete
+    </button>
+  );
+}
