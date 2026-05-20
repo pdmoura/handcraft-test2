@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { useToast } from '@/components/providers/ToastProvider';
 import { Save, Upload } from 'lucide-react';
 import CloudinaryUploadButton from '@/components/ui/CloudinaryUploadButton';
+import { createProductAction } from '@/lib/actions/products';
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -29,20 +30,17 @@ export default function NewProductPage() {
     }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-          images: imageUrls.map(url => ({ url })),
-        }),
+      const data = await createProductAction({
+        ...form,
+        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+        images: imageUrls.map(url => ({ url })),
       });
-      const data = await res.json();
       if (data.success) { showToast('Product created!', 'success'); router.push('/dashboard/products'); }
       else showToast(data.error || 'Failed', 'error');
     } catch { showToast('Network error', 'error'); }
     finally { setIsLoading(false); }
   };
+
 
   const inputClass = "w-full px-4 py-3 border border-border-light rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all";
 

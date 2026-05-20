@@ -9,6 +9,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import { formatPrice } from '@/lib/utils';
 import { CheckCircle, Package } from 'lucide-react';
 import Link from 'next/link';
+import { createOrderAction } from '@/lib/actions/orders';
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart();
@@ -34,12 +35,7 @@ export default function CheckoutPage() {
     }
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shippingAddress: form }),
-      });
-      const data = await res.json();
+      const data = await createOrderAction(form);
       if (data.success) {
         clearCart();
         setOrderPlaced(true);
@@ -50,6 +46,7 @@ export default function CheckoutPage() {
     } catch { showToast('Network error', 'error'); }
     finally { setIsSubmitting(false); }
   };
+
 
   if (orderPlaced) {
     return (

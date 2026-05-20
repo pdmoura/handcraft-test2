@@ -8,6 +8,7 @@ import { useToast } from '@/components/providers/ToastProvider';
 import { Save, Trash2, Upload } from 'lucide-react';
 import CloudinaryUploadButton from '@/components/ui/CloudinaryUploadButton';
 import { use } from 'react';
+import { updateProductAction, deleteProductAction } from '@/lib/actions/products';
 
 export default function EditProductPage({  params  }) {
   const { id } = use(params);
@@ -36,15 +37,11 @@ export default function EditProductPage({  params  }) {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/products/${id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
-          images: imageUrls.map(url => ({ url })),
-        }),
+      const data = await updateProductAction(id, {
+        ...form,
+        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+        images: imageUrls.map(url => ({ url })),
       });
-      const data = await res.json();
       if (data.success) { showToast('Product updated!', 'success'); router.push('/dashboard/products'); }
       else showToast(data.error || 'Failed', 'error');
     } catch { showToast('Network error', 'error'); }
@@ -54,12 +51,12 @@ export default function EditProductPage({  params  }) {
   const handleDelete = async () => {
     if (!confirm('Delete this product?')) return;
     try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = await deleteProductAction(id);
       if (data.success) { showToast('Product deleted', 'success'); router.push('/dashboard/products'); }
       else showToast(data.error || 'Failed', 'error');
     } catch { showToast('Network error', 'error'); }
   };
+
 
   const inputClass = "w-full px-4 py-3 border border-border-light rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all";
 
