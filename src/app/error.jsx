@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Database, AlertTriangle, RefreshCw, Home, Terminal } from 'lucide-react';
+import { Database, AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RootErrorBoundary({ error, reset }) {
@@ -115,36 +115,15 @@ export default function RootErrorBoundary({ error, reset }) {
             {isResetting ? 'Checking connection...' : 'Try Again'}
           </button>
           
-          <Link
-            href="/"
+          <button
+            onClick={() => window.location.href = '/'}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-border-light text-text hover:bg-surface-warm font-body font-semibold px-8 py-3 rounded-full transition-all"
           >
             <Home size={18} />
             Go Home
-          </Link>
-        </div>
-
-        {/* ===== DEVELOPER DETAILED LOGS (Gracefully Collapsed) ===== */}
-        <div className="mt-12 pt-6 border-t border-border-light">
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="inline-flex items-center gap-2 text-xs font-ui font-semibold text-text-muted hover:text-text transition-colors"
-          >
-            <Terminal size={14} />
-            {showDetails ? 'Hide technical logs' : 'Show technical logs'}
           </button>
-
-          {showDetails && (
-            <div className="mt-4 p-4 bg-slate-950 text-slate-200 rounded-xl font-mono text-xs text-left overflow-x-auto max-h-48 border border-slate-800 shadow-inner select-text">
-              <div className="text-rose-400 font-bold mb-1">
-                Error name: {error?.name || 'UnknownException'}
-              </div>
-              <div className="text-slate-400 whitespace-pre-wrap">
-                {error?.message || error?.stack || 'No detailed error logs provided.'}
-              </div>
-            </div>
-          )}
         </div>
+
 
       </div>
     </div>

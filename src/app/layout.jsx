@@ -26,7 +26,7 @@ const uiFont = Roboto({
 
 export const metadata = {
   title: {
-    default: "Handcrafted Haven â€” Artisan Marketplace",
+    default: "Handcrafted Haven - Artisan Marketplace",
     template: "%s | Handcrafted Haven",
   },
   description:
@@ -47,7 +47,7 @@ export const metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Handcrafted Haven",
-    title: "Handcrafted Haven â€” Artisan Marketplace",
+    title: "Handcrafted Haven - Artisan Marketplace",
     description:
       "Discover unique handmade products from talented artisans worldwide.",
   },
