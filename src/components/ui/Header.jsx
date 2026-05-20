@@ -34,7 +34,7 @@ export default function Header() {
             href="/"
             className="flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
-            <Image src="/logo-idea-haven.webp" alt="Handcrafted Haven" width={240} height={64} className="object-contain shrink-0 h-16 w-auto max-w-[240px]" priority />
+            <Image src="/logo-idea-haven.webp" alt="Handcrafted Haven" width={120} height={32} className="object-contain shrink-0 h-8 md:h-10 w-auto" priority />
             <span className="font-display text-xl md:text-2xl uppercase tracking-wider text-primary hidden sm:block">
               Handcrafted Haven
             </span>
@@ -72,10 +72,10 @@ export default function Header() {
             ) : (
               <Link
                 href="/sell"
-                className={`font-body text-sm font-medium transition-colors ${
+                className={`font-body text-sm font-medium transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-cta after:transition-all hover:after:w-full ${
                   pathname.startsWith('/sell')
-                    ? "text-cta"
-                    : "text-cta hover:text-cta-light"
+                    ? "text-cta after:w-full"
+                    : "text-cta hover:text-cta-light after:w-0"
                 }`}
               >
                 Sell

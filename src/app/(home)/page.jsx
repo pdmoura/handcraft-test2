@@ -1,21 +1,36 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Leaf, Users, ShieldCheck, Palette, Star, TrendingUp, MapPin, Store } from 'lucide-react';
+import { ArrowRight, Leaf, Heart, Star, TrendingUp, MapPin, Store } from 'lucide-react';
 import prisma from '@/lib/prisma';
-import ProductCard from '@/components/ui/ProductCard';
+import LovedThisWeekCarousel from '@/components/ui/LovedThisWeekCarousel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // Fetch data for the page
-  const [categories, featuredProducts, activeSellers] = await Promise.all([
-    prisma.category.findMany({
-      include: { _count: { select: { products: { where: { status: 'active' } } } } },
-    }),
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  const lovedProducts = await prisma.product.findMany({
+    where: { status: 'active', avgRating: { gte: 1 } },
+    orderBy: [{ avgRating: 'desc' }, { reviewCount: 'desc' }],
+    take: 12,
+    include: {
+      images: { where: { isPrimary: true }, take: 1 },
+      seller: { select: { id: true, name: true, avatarUrl: true } },
+      category: { select: { id: true, name: true, slug: true } },
+    },
+  });
+
+  const lovedProductIds = lovedProducts.map((p) => p.id);
+
+  const [featuredProducts, activeSellers] = await Promise.all([
     prisma.product.findMany({
-      where: { status: 'active' },
+      where: {
+        status: 'active',
+        id: { notIn: lovedProductIds },
+      },
       orderBy: { createdAt: 'desc' },
-      take: 8,
+      take: 12,
       include: {
         images: { where: { isPrimary: true }, take: 1 },
         seller: { select: { id: true, name: true, avatarUrl: true } },
@@ -61,10 +76,10 @@ export default async function HomePage() {
               <div className="flex flex-wrap gap-4 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                 <Link
                   href="/shop"
-                  className="inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body font-semibold px-8 py-3.5 rounded-full transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                  className="group inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body font-semibold px-8 py-3.5 rounded-full transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Shop Now
-                  <ArrowRight size={18} />
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                 </Link>
                 <Link
                   href="/auth/register?role=seller"
@@ -98,55 +113,46 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ===== CATEGORIES ===== */}
+      {/* ===== LOVED THIS WEEK ===== */}
       <section className="py-16 md:py-24">
-        <div className="container-app">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl text-primary uppercase mb-3">
-              Browse by Category
+        <div className="container-app mb-10">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Heart size={20} className="text-cta fill-cta" />
+              <span className="font-ui text-sm text-text-muted uppercase tracking-widest">
+                Community favorites
+              </span>
+            </div>
+            <h2 className="font-display text-5xl md:text-6xl text-primary uppercase mb-3">
+              Loved This Week
             </h2>
             <p className="font-body text-text-muted max-w-lg mx-auto">
-              Explore our curated collection of handmade goods across various crafts
+              The most loved handcrafted pieces chosen by our community
             </p>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 stagger-children">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`/shop?category=${cat.slug}`}
-                className="group relative bg-white rounded-xl overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="aspect-[4/3] bg-gradient-to-br from-primary/10 to-accent/10 relative overflow-hidden group-hover:opacity-90 transition-opacity">
-                  {cat.imageUrl ? (
-                    <Image src={cat.imageUrl} alt={cat.name} fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Palette size={40} className="text-primary/40 group-hover:text-cta transition-colors" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <h3 className="font-body font-semibold text-text text-sm md:text-base group-hover:text-primary transition-colors">
-                    {cat.name}
-                  </h3>
-                  <p className="font-ui text-xs text-text-muted mt-0.5">
-                    {cat._count.products} product{cat._count.products !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <LovedThisWeekCarousel products={lovedProducts.map((p) => ({
+            ...p,
+            price: Number(p.price),
+            status: p.status,
+            createdAt: p.createdAt.toISOString(),
+            updatedAt: p.updatedAt.toISOString(),
+          }))} />
         </div>
       </section>
 
       {/* ===== FEATURED PRODUCTS ===== */}
       {featuredProducts.length > 0 && (
         <section className="py-16 md:py-24 bg-surface-warm">
-          <div className="container-app">
-            <div className="flex items-end justify-between mb-12">
+          <div className="container-app mb-10">
+            <div className="flex items-end justify-between">
               <div>
-                <h2 className="font-display text-3xl md:text-4xl text-primary uppercase mb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp size={20} className="text-accent" />
+                  <span className="font-ui text-sm text-text-muted uppercase tracking-widest">
+                    Fresh from artisans
+                  </span>
+                </div>
+                <h2 className="font-display text-5xl md:text-6xl text-primary uppercase mb-3">
                   Newest Arrivals
                 </h2>
                 <p className="font-body text-text-muted">
@@ -155,32 +161,32 @@ export default async function HomePage() {
               </div>
               <Link
                 href="/shop"
-                className="hidden md:inline-flex items-center gap-2 font-body font-semibold text-accent hover:text-accent-hover transition-colors"
+                className="group hidden md:inline-flex items-center gap-2 font-body font-semibold text-accent hover:text-accent-hover transition-colors"
               >
                 View All
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={{
-                  ...product,
-                  price: Number(product.price),
-                  status: product.status,
-                  createdAt: product.createdAt.toISOString(),
-                  updatedAt: product.updatedAt.toISOString(),
-                }} />
-              ))}
-            </div>
+            <LovedThisWeekCarousel
+              products={featuredProducts.map((product) => ({
+                ...product,
+                price: Number(product.price),
+                status: product.status,
+                createdAt: product.createdAt.toISOString(),
+                updatedAt: product.updatedAt.toISOString(),
+              }))}
+              direction={-1}
+              edgeFadeBg="from-surface-warm"
+            />
 
             <div className="md:hidden mt-8 text-center">
               <Link
                 href="/shop"
-                className="inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body font-semibold px-6 py-3 rounded-full transition-colors"
+                className="group inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body font-semibold px-6 py-3 rounded-full transition-colors"
               >
                 View All Products
-                <ArrowRight size={16} />
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </div>
@@ -206,10 +212,10 @@ export default async function HomePage() {
             </p>
             <Link
               href="/auth/register?role=seller"
-              className="inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body font-semibold px-8 py-3.5 rounded-full transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              className="group inline-flex items-center gap-2 bg-cta hover:bg-cta-hover text-text font-body font-semibold px-8 py-3.5 rounded-full transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
             >
               Start Selling Today
-              <ArrowRight size={18} />
+              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
