@@ -5,6 +5,8 @@ import { useToast } from '@/components/providers/ToastProvider';
 import Button from '@/components/ui/Button';
 import { Save } from 'lucide-react';
 
+import { updateProfileAction } from '@/lib/actions/auth';
+
 export default function DashboardProfilePage() {
   const { user, refreshUser } = useAuth();
   const { showToast } = useToast();
@@ -21,16 +23,13 @@ export default function DashboardProfilePage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/me', {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bio: form.bio, location: form.location, socialLinks: { instagram: form.instagram, twitter: form.twitter, website: form.website } }),
-      });
-      const data = await res.json();
+      const data = await updateProfileAction({ bio: form.bio, location: form.location, socialLinks: { instagram: form.instagram, twitter: form.twitter, website: form.website } });
       if (data.success) { showToast('Profile updated!', 'success'); refreshUser(); }
       else showToast(data.error || 'Failed', 'error');
     } catch { showToast('Network error', 'error'); }
     finally { setIsLoading(false); }
   };
+
 
   const inputClass = "w-full px-4 py-3 border border-border-light rounded-lg font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 transition-all";
 

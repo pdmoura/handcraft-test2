@@ -11,6 +11,10 @@ import { Package, Upload, Trash2, AlertTriangle, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import CloudinaryUploadButton from '@/components/ui/CloudinaryUploadButton';
 import Link from 'next/link';
+import { updateProfileAction, deleteAccountAction } from '@/lib/actions/auth';
+import { getOrdersAction } from '@/lib/actions/orders';
+
+
 
 export default function AccountPage() {
   const { user, isLoading: authLoading, refreshUser } = useAuth();
@@ -35,10 +39,10 @@ export default function AccountPage() {
       setEmail(user.email);
       setAvatarUrl(user.avatarUrl);
       
-      fetch('/api/orders')
-        .then(r => r.json())
+      getOrdersAction()
         .then(d => { if (d.success) setOrders(d.data || []); })
         .finally(() => setLoadingOrders(false));
+
     } else {
       setLoadingOrders(false);
     }
@@ -60,12 +64,7 @@ export default function AccountPage() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const res = await fetch('/api/auth/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, avatarUrl })
-      });
-      const data = await res.json();
+      const data = await updateProfileAction({ name, email, avatarUrl });
       if (data.success) {
         showToast('Profile updated successfully!', 'success');
         refreshUser(); // Refresh global user state
@@ -82,8 +81,7 @@ export default function AccountPage() {
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-      const res = await fetch('/api/auth/me', { method: 'DELETE' });
-      const data = await res.json();
+      const data = await deleteAccountAction();
       if (data.success) {
         showToast('Account deleted permanently.', 'success');
         window.location.href = '/'; // Hard redirect to clear all states
@@ -96,6 +94,7 @@ export default function AccountPage() {
       setIsDeleting(false);
     }
   };
+
 
   return (
     <div className="container-app py-8 pb-16">

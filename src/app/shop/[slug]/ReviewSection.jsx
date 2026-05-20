@@ -9,6 +9,7 @@ import { useToast } from '@/components/providers/ToastProvider';
 import { formatDate } from '@/lib/utils';
 import { MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import { replyToReviewAction } from '@/lib/actions/reviews';
 
 export default function ReviewSection({  productId, sellerId, reviews: initialReviews, avgRating, reviewCount  }) {
   const { user } = useAuth();
@@ -22,20 +23,16 @@ export default function ReviewSection({  productId, sellerId, reviews: initialRe
 
   const isSeller = user?.id === sellerId;
 
-  const handleReplySubmit = async (reviewId) => {
-    if (!replyText.trim()) {
+  const handleReplySubmit = async (reviewId, forcedText = null) => {
+    const textToSubmit = forcedText !== null ? forcedText : replyText.trim();
+    if (forcedText === null && !textToSubmit) {
       showToast('Please provide a reply', 'warning');
       return;
     }
 
     setIsSubmittingReply(true);
     try {
-      const res = await fetch(`/api/reviews/${reviewId}/reply`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sellerReply: replyText.trim() }),
-      });
-      const data = await res.json();
+      const data = await replyToReviewAction(reviewId, textToSubmit);
       if (data.success) {
         setReviews(reviews.map((r) => r.id === reviewId ? {
           ...r,
@@ -44,7 +41,7 @@ export default function ReviewSection({  productId, sellerId, reviews: initialRe
         } : r));
         setReplyingTo(null);
         setReplyText('');
-        showToast(replyText.trim() === '' ? 'Reply deleted!' : 'Reply saved!', 'success');
+        showToast(textToSubmit === '' ? 'Reply deleted!' : 'Reply saved!', 'success');
       } else {
         showToast(data.error || 'Failed to save reply', 'error');
       }
@@ -165,8 +162,7 @@ export default function ReviewSection({  productId, sellerId, reviews: initialRe
                     {review.sellerReply && (
                       <button
                         onClick={async () => {
-                          setReplyText('');
-                          await handleReplySubmit(review.id);
+                          await handleReplySubmit(review.id, '');
                         }}
                         className="text-xs font-body font-semibold text-red-500 hover:text-red-700 transition-colors"
                       >

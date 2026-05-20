@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server';
+'use server';
+
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
 
-export async function GET() {
+export async function getOrdersAction() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return { success: false, error: 'Unauthorized' };
     }
 
     const orders = await prisma.order.findMany({
@@ -28,25 +30,22 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, data: orders });
+    return { success: true, data: orders };
   } catch (error) {
-    console.error('Orders GET error:', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    console.error('getOrdersAction error:', error);
+    return { success: false, error: 'Internal server error' };
   }
 }
 
-export async function POST(request) {
+export async function createOrderAction(shippingAddress) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return { success: false, error: 'Unauthorized' };
     }
 
-    const body = await request.json();
-    const { shippingAddress } = body;
-
     if (!shippingAddress) {
-      return NextResponse.json({ success: false, error: 'Shipping address is required' }, { status: 400 });
+      return { success: false, error: 'Shipping address is required' };
     }
 
     // Get cart items
@@ -56,17 +55,17 @@ export async function POST(request) {
     });
 
     if (cartItems.length === 0) {
-      return NextResponse.json({ success: false, error: 'Cart is empty' }, { status: 400 });
+      return { success: false, error: 'Cart is empty' };
     }
 
     // Calculate total and validate stock
     let totalAmount = 0;
     for (const item of cartItems) {
       if (item.product.status !== 'active' || item.product.inventoryQty < item.quantity) {
-        return NextResponse.json(
-          { success: false, error: `${item.product.title} is out of stock or has insufficient quantity` },
-          { status: 400 }
-        );
+        return {
+          success: false,
+          error: `${item.product.title} is out of stock or has insufficient quantity`,
+        };
       }
       totalAmount += Number(item.product.price) * item.quantity;
     }
@@ -119,9 +118,11 @@ export async function POST(request) {
       return newOrder;
     });
 
-    return NextResponse.json({ success: true, data: order }, { status: 201 });
+    revalidatePath('/account');
+    revalidatePath('/dashboard/products'); // in case inventory changed
+    return { success: true, data: order };
   } catch (error) {
-    console.error('Orders POST error:', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
+    console.error('createOrderAction error:', error);
+    return { success: false, error: 'Internal server error' };
   }
 }

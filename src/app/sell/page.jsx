@@ -1,6 +1,7 @@
 'use client';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { useToast } from '@/components/providers/ToastProvider';
+import { updateProfileAction } from '@/lib/actions/auth';
 import { useState, useEffect } from 'react';
 import { Store, MapPin, AlignLeft, Sparkles } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -34,12 +35,7 @@ export default function SellPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/auth/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'seller', bio, location }),
-      });
-      const data = await res.json();
+      const data = await updateProfileAction({ role: 'seller', bio, location });
       if (data.success) {
         showToast('Welcome to the Artisan Community! Your seller account is ready.', 'success');
         await refreshUser();
@@ -53,6 +49,7 @@ export default function SellPage() {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-surface-warm pb-20">

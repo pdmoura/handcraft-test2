@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { deleteProductAction } from '@/lib/actions/products';
 
 export default function DeleteProductButton({  productId  }) {
   const { showToast } = useToast();
@@ -16,8 +17,7 @@ export default function DeleteProductButton({  productId  }) {
 
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = await deleteProductAction(productId);
       
       if (data.success) {
         showToast('Product deleted successfully', 'success');
@@ -31,6 +31,7 @@ export default function DeleteProductButton({  productId  }) {
       setIsDeleting(false);
     }
   };
+
 
   return (
     <button 
