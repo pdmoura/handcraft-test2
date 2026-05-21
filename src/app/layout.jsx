@@ -55,6 +55,18 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-57.png", sizes: "57x57", type: "image/png" },
+      { url: "/favicon-60.png", sizes: "60x60", type: "image/png" },
+      { url: "/favicon-70.png", sizes: "70x70", type: "image/png" },
+      { url: "/favicon-72.png", sizes: "72x72", type: "image/png" },
+      { url: "/favicon-76.png", sizes: "76x76", type: "image/png" },
+      { url: "/favicon-96.png", sizes: "96x96", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
