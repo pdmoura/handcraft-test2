@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
-import { slugify } from '@/lib/utils';
 
 export async function GET(request) {
   try {
@@ -75,66 +73,6 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Products GET error:', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function POST(request) {
-  try {
-    const session = await getSession();
-    if (!session || session.role !== 'seller') {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { title, description, price, categoryId, tags, inventoryQty, images, status } = body;
-
-    if (!title || !description || !price || !categoryId) {
-      return NextResponse.json(
-        { success: false, error: 'Title, description, price, and category are required' },
-        { status: 400 }
-      );
-    }
-
-    // Generate unique slug
-    let slug = slugify(title);
-    const existingSlug = await prisma.product.findUnique({ where: { slug } });
-    if (existingSlug) {
-      slug = `${slug}-${Date.now()}`;
-    }
-
-    const product = await prisma.product.create({
-      data: {
-        sellerId: session.id,
-        categoryId: parseInt(categoryId),
-        title,
-        slug,
-        description,
-        price: parseFloat(price),
-        inventoryQty: parseInt(inventoryQty) || 0,
-        tags: tags || [],
-        status: status || 'active',
-        images: images?.length
-          ? {
-              create: images.map((img, i) => ({
-                url: img.url,
-                publicId: img.publicId || null,
-                displayOrder: i,
-                isPrimary: i === 0,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        images: true,
-        category: true,
-        seller: { select: { id: true, name: true } },
-      },
-    });
-
-    return NextResponse.json({ success: true, data: product }, { status: 201 });
-  } catch (error) {
-    console.error('Products POST error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

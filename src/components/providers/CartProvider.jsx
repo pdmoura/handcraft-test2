@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthProvider';
+import { getCartAction, addToCartAction, updateCartQuantityAction, removeCartItemAction } from '@/lib/actions/cart';
 
 const CartContext = createContext(undefined);
 
@@ -23,9 +24,8 @@ export function CartProvider({  children  }) {
     }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/cart');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await getCartAction();
+      if (data.success) {
         setItems(data.data || []);
       }
     } catch {
@@ -41,13 +41,8 @@ export function CartProvider({  children  }) {
 
   const addItem = async (productId, quantity = 1) => {
     try {
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, quantity }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await addToCartAction(productId, quantity);
+      if (data.success) {
         await refreshCart();
         return { success: true };
       }
@@ -63,11 +58,7 @@ export function CartProvider({  children  }) {
       prev.map((item) => (item.id === cartItemId ? { ...item, quantity } : item))
     );
     try {
-      await fetch(`/api/cart/${cartItemId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity }),
-      });
+      await updateCartQuantityAction(cartItemId, quantity);
     } catch {
       refreshCart();
     }
@@ -77,11 +68,12 @@ export function CartProvider({  children  }) {
     // Optimistic update
     setItems((prev) => prev.filter((item) => item.id !== cartItemId));
     try {
-      await fetch(`/api/cart/${cartItemId}`, { method: 'DELETE' });
+      await removeCartItemAction(cartItemId);
     } catch {
       refreshCart();
     }
   };
+
 
   const clearCart = () => {
     setItems([]);

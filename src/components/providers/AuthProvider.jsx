@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { getCurrentUserAction, loginAction, registerAction, logoutAction } from '@/lib/actions/auth';
 
 const AuthContext = createContext(undefined);
 
@@ -10,9 +11,8 @@ export function AuthProvider({  children  }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await getCurrentUserAction();
+      if (data.success) {
         setUser(data.data);
       } else {
         setUser(null);
@@ -30,13 +30,8 @@ export function AuthProvider({  children  }) {
 
   const login = async (email, password) => {
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await loginAction(email, password);
+      if (data.success) {
         setUser(data.data);
         return { success: true };
       }
@@ -48,13 +43,8 @@ export function AuthProvider({  children  }) {
 
   const register = async (name, email, password, role) => {
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await registerAction(name, email, password, role);
+      if (data.success) {
         setUser(data.data);
         return { success: true };
       }
@@ -66,11 +56,12 @@ export function AuthProvider({  children  }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await logoutAction();
     } finally {
       setUser(null);
     }
   };
+
 
   return (
     <AuthContext.Provider value={{ user, isLoading, login, register, logout, refreshUser }}>

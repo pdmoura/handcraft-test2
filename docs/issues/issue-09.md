@@ -1,3 +1,21 @@
+# Issue 09 — Header, MobileMenu & Footer
+
+**Labels:** `feature`, `frontend` | **Priority:** 🟡 High | **Depends on:** Issues 06, 07
+
+## Checklist
+- [ ] Create `src/components/ui/Header.jsx` (194 lines)
+- [ ] Create `src/components/ui/MobileMenu.jsx` (213 lines)
+- [ ] Create `src/components/ui/Footer.jsx` (143 lines)
+
+> ⚠️ All three files must use the `'use client'` directive.
+
+## Files to Create
+
+### File 1 — `src/components/ui/Header.jsx`
+
+> Sticky header with logo, desktop nav, cart badge, account dropdown, and mobile hamburger.
+
+```jsx
 'use client';
 
 import { useState } from 'react';
@@ -49,8 +67,8 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   className={`font-body text-sm font-medium transition-colors relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:bg-cta after:transition-all hover:after:w-full ${
-                    isActive 
-                      ? "text-cta after:w-full" 
+                    isActive
+                      ? "text-cta after:w-full"
                       : "text-text-muted hover:text-cta after:w-0"
                   }`}
                 >
@@ -191,3 +209,39 @@ export default function Header() {
     </header>
   );
 }
+```
+
+---
+
+### File 2 — `src/components/ui/MobileMenu.jsx`
+
+> Slide-in drawer from right, with overlay backdrop, Escape-to-close, focus trap, user info, all nav links, and sign in/out buttons.
+
+Due to the size of this file (213 lines), please copy the exact code from the reference repo file: `src/components/ui/MobileMenu.jsx`
+
+Key implementation details:
+- `'use client'` directive
+- Imports: `useEffect`, `useRef`, `Link`, `Image`, icons (`X`, `ShoppingCart`, `User`, `LogOut`, `LayoutDashboard`, `Store`), `useAuth`, `usePathname`, `useCart`
+- Closes on Escape key, locks body scroll when open
+- Focus trap (first focusable element gets focus)
+- Overlay click to close
+- Shows user avatar/name/email when logged in
+- All navigation links with active state detection
+- Cart link with badge count
+- Sell/Dashboard link depending on user role
+- Sign Out button (logged in) or Sign In/Create Account buttons (logged out)
+
+---
+
+### File 3 — `src/components/ui/Footer.jsx`
+
+> Multi-column footer with brand, quick links, legal, contact info, social icons. Hidden on `/dashboard` routes.
+
+Due to the size of this file (143 lines), please copy the exact code from the reference repo file: `src/components/ui/Footer.jsx`
+
+Key implementation details:
+- `'use client'` directive
+- Returns `null` if `pathname.startsWith('/dashboard')`
+- 5-column grid: Brand (logo + description), Quick Links, Legal, Contact (email/phone/address with icons), Follow (Instagram/Twitter/Facebook SVG icons)
+- Bottom bar with copyright year using `new Date().getFullYear()`
+- All links use `font-body text-sm text-white/80 hover:text-cta`

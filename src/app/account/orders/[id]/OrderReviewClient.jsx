@@ -4,6 +4,7 @@ import Button from '@/components/ui/Button';
 import { Star, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/providers/ToastProvider';
 import { useRouter } from 'next/navigation';
+import { createReviewAction } from '@/lib/actions/reviews';
 
 export default function OrderReviewClient({  orderItemId, productId, hasReviewed  }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,12 +27,7 @@ export default function OrderReviewClient({  orderItemId, productId, hasReviewed
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, orderItemId, rating, comment: comment.trim() }),
-      });
-      const data = await res.json();
+      const data = await createReviewAction({ productId, orderItemId, rating, comment: comment.trim() });
       
       if (data.success) {
         showToast('Review submitted successfully!', 'success');
@@ -46,6 +42,7 @@ export default function OrderReviewClient({  orderItemId, productId, hasReviewed
       setIsSubmitting(false);
     }
   };
+
 
   if (hasReviewed) {
     return (
