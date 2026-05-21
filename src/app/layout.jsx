@@ -50,6 +50,14 @@ export const metadata = {
     title: "Handcrafted Haven â€” Artisan Marketplace",
     description:
       "Discover unique handmade products from talented artisans worldwide.",
+    images: [
+      {
+        url: "/og-image-handcrafted.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Handcrafted Haven – Artisan Marketplace",
+      },
+    ],
   },
   robots: {
     index: true,
